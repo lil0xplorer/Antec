@@ -143,7 +143,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   };
 
   const handleMintCertificate = () => {
-    window.location.href = 'https://www.google.com';
+    window.location.href = 'http://127.0.0.1:5500/mm.html';
   };
 
   const updateProgress = () => {
