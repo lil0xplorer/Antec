@@ -43,6 +43,45 @@ const Dashboard: React.FC<DashboardProps> = ({ courses, onClose }) => {
     { label: 'Average Progress', value: `${Math.round(totalProgress)}%`, icon: BarChart },
   ];
 
+  const getCourseLink = (courseTitle: string) => {
+    switch(courseTitle) {
+      case 'Web3 Development Fundamentals':
+        return 'https://drive.google.com/drive/folders/1bAN42SqnDbMq93zxvNkW4ALSQy_M4dWV?usp=drive_link';
+      case 'Smart Contract Security':
+        return 'https://drive.google.com/drive/folders/1tGbs03oirCjKc7QctAvff7x-MxCtJkqK?usp=drive_link';
+      case 'DeFi Protocol Design':
+        return 'https://drive.google.com/drive/folders/14xwzF89HVHPQZ1tNwvVWJpzVc0X9Fh1q?usp=drive_link';
+      default:
+        return '#';
+    }
+  };
+
+  const updateProgress = (courseTitle: string) => {
+    const walletAddress = localStorage.getItem('walletAddress');
+    if (walletAddress) {
+      const purchasedCourses = JSON.parse(localStorage.getItem(`purchases_${walletAddress}`) || '[]');
+      const updatedCourses = purchasedCourses.map((course: any) => {
+        if (course.title === courseTitle) {
+          const newProgress = Math.min((course.progress || 0) + 20, 100);
+          return { ...course, progress: newProgress };
+        }
+        return course;
+      });
+      localStorage.setItem(`purchases_${walletAddress}`, JSON.stringify(updatedCourses));
+      
+      // Trigger a storage event to update both components
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const handleContinueLearning = (course: PurchasedCourse) => {
+    const courseLink = getCourseLink(course.title);
+    if (courseLink !== '#') {
+      updateProgress(course.title);
+      window.open(courseLink, '_blank');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="relative w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl">
@@ -134,7 +173,10 @@ const Dashboard: React.FC<DashboardProps> = ({ courses, onClose }) => {
                 </div>
 
                 {/* Continue Button */}
-                <button className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all duration-200 transform hover:-translate-y-0.5">
+                <button 
+                  className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all duration-200 transform hover:-translate-y-0.5"
+                  onClick={() => handleContinueLearning(course)}
+                >
                   Continue Learning
                 </button>
               </div>
