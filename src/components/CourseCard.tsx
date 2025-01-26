@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Clock, Users, CheckCircle, Award, Star, StarHalf } from 'lucide-react';
+import { BookOpen, Clock, Users, CheckCircle, Award, Star, StarHalf, PlayCircle } from 'lucide-react';
 
 // Add a type for course categories
 type CourseCategory = 'crypto' | 'ai' | 'creative' | 'web3' | 'business' | 'dao' | 'zk';
@@ -17,6 +17,7 @@ interface CourseCardProps {
   reviews: number;
   isDarkMode: boolean;
   category: CourseCategory;
+  continueLearningLink?: string;
 }
 
 const getCategoryColors = (category: CourseCardProps['category'], isDarkMode: boolean) => {
@@ -101,11 +102,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
   reviews,
   isDarkMode,
   category,
+  continueLearningLink,
 }) => {
   const [isPurchasing, setPurchasing] = useState(false);
   const [purchased, setPurchased] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const colors = getCategoryColors(category, isDarkMode);
 
@@ -141,6 +144,45 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
   const handleMintCertificate = () => {
     window.location.href = 'https://www.google.com';
+  };
+
+  const updateProgress = () => {
+    const walletAddress = localStorage.getItem('walletAddress');
+    if (walletAddress) {
+      const purchasedCourses = JSON.parse(localStorage.getItem(`purchases_${walletAddress}`) || '[]');
+      const updatedCourses = purchasedCourses.map((course: any) => {
+        if (course.title === title) {
+          const newProgress = Math.min((course.progress || 0) + 20, 100);
+          return { ...course, progress: newProgress };
+        }
+        return course;
+      });
+      localStorage.setItem(`purchases_${walletAddress}`, JSON.stringify(updatedCourses));
+      
+      // Trigger a storage event for Dashboard to update
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const handleContinueLearning = () => {
+    let courseLink = '';
+    switch(title) {
+      case 'Web3 Development Fundamentals':
+        courseLink = 'https://drive.google.com/drive/folders/1bAN42SqnDbMq93zxvNkW4ALSQy_M4dWV?usp=drive_link';
+        break;
+      case 'Smart Contract Security':
+        courseLink = 'https://drive.google.com/drive/folders/1tGbs03oirCjKc7QctAvff7x-MxCtJkqK?usp=drive_link';
+        break;
+      case 'DeFi Protocol Design':
+        courseLink = 'https://drive.google.com/drive/folders/14xwzF89HVHPQZ1tNwvVWJpzVc0X9Fh1q?usp=drive_link';
+        break;
+      default:
+        courseLink = '#';
+    }
+    if (courseLink !== '#') {
+      updateProgress();
+      window.open(courseLink, '_blank');
+    }
   };
 
   const cardStyles = {
@@ -262,7 +304,17 @@ const CourseCard: React.FC<CourseCardProps> = ({
                   ? 'Processing...'
                   : 'Purchase Course'}
               </button>
-              
+
+              {purchased && (
+                <button
+                  onClick={handleContinueLearning}
+                  className="button-3d w-full py-2 px-4 rounded-lg font-medium bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-neon flex items-center justify-center gap-2 transform transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  <PlayCircle className="w-5 h-5 animate-pulse" />
+                  Continue Learning
+                </button>
+              )}
+
               {purchased && (
                 <button
                   onClick={handleMintCertificate}
